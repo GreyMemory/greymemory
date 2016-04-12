@@ -6,7 +6,7 @@ Floating point Sparse Distributed Memory
 GreyMemory is a new implementation of [sparce distributed memory](https://en.wikipedia.org/wiki/Sparse_distributed_memory). 
 
 ## Authors
-Anton Mazhurin
+Anton Mazhurin  
 Nawwaf Kharma
 
 ## What is new in GreyMemory?
