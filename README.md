@@ -4,6 +4,7 @@ Floating point Sparse Distributed Memory
 ## Description
 
 GreyMemory is a new implementation of [sparce distributed memory](https://en.wikipedia.org/wiki/Sparse_distributed_memory). 
+Currently, we use GreyMemory as a time series anomaly detector.
 
 ## Authors
 Anton Mazhurin  
