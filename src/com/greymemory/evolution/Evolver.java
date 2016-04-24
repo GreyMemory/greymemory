@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Mindmick Corp.
+ * Copyright (c) 2015 Anton Mazhurin
  *  * 
  */
 package com.greymemory.evolution;

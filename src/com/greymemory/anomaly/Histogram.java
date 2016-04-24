@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2015 Mindmick Corp. to present
+ * Copyright(c) 2015 Anton Mazhurin to present
  * Anton Mazhurin & Nawwaf Kharma
  */
 package com.greymemory.anomaly;
