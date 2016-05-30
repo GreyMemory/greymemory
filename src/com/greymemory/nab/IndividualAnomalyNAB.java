@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.greymemory.anomaly;
+package com.greymemory.nab;
 
+import com.greymemory.anomaly.DataSample;
+import com.greymemory.anomaly.DataSource;
+import com.greymemory.anomaly.DataSourceCSV;
+import com.greymemory.anomaly.IndividualAnomaly;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -18,9 +22,9 @@ import java.util.logging.Logger;
  *
  * @author anton
  */
-public class IndividualAnomalyNumenta extends IndividualAnomaly {
+public class IndividualAnomalyNAB extends IndividualAnomaly {
     
-    public IndividualAnomalyNumenta(String input_file, String log_file, Date start_from, double max_error, double median, int max_samples) {
+    public IndividualAnomalyNAB(String input_file, String log_file, Date start_from, double max_error, double median, int max_samples) {
         super(input_file, log_file, start_from, max_error, median, max_samples);
     }
     
