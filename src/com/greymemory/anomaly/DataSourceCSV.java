@@ -46,7 +46,7 @@ public class DataSourceCSV extends DataSource {
                     // read the historic data from the files
                     while ((line = reader.readLine()) != null) {
                         if(Thread.interrupted()) break;
-                        sample = read_data(line);
+                        sample = read_data(line, num_processed == 0);
                         if(sample == null)
                             continue;
                         if(dateStart != null && sample.date.before(dateStart))
@@ -77,7 +77,7 @@ public class DataSourceCSV extends DataSource {
                             for(int i = 0; i < new_data.size(); i++){
                                 DataSample new_Sample;
                                 line = new_data.get(i);
-                                new_Sample = read_data(line);
+                                new_Sample = read_data(line, false);
                                 if(new_Sample == null) continue;
                                 if(last_processed_date != null && 
                                         (new_Sample.date.before(last_processed_date) 
@@ -89,7 +89,7 @@ public class DataSourceCSV extends DataSource {
 
                             for(int i = index_start; i >= 0 && i < new_data.size(); i++){
                                 line = new_data.get(i);
-                                DataSample new_Sample = read_data(line);
+                                DataSample new_Sample = read_data(line, false);
                                 OnData(new_Sample);
                             }
                         }

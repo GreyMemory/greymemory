@@ -56,7 +56,7 @@ public class DataSourceCSV2 extends DataSource {
             // read the historic data from the files
             while ((line1 = reader1.readLine()) != null) {
                 if(Thread.interrupted()) break;
-                sample1 = read_data(line1);
+                sample1 = read_data(line1, false);
                 if(dateStart != null && sample1.date.before(dateStart))
                     continue;
                 
@@ -64,13 +64,13 @@ public class DataSourceCSV2 extends DataSource {
                     line2 = reader2.readLine();
                     if(line2 == null) 
                         break;
-                    sample2 = read_data(line2);
+                    sample2 = read_data(line2,false);
 
                     if(!sample2.date.equals(sample1.date)){
                         // sync
                         while ((line2 = reader2.readLine()) != null) {
                             if(Thread.interrupted())break;
-                            sample2 = read_data(line2);
+                            sample2 = read_data(line2, false);
                             if(sample2.date.equals(sample1.date))
                                 break;
                         }
@@ -117,7 +117,7 @@ public class DataSourceCSV2 extends DataSource {
                         if(line1 == null || line1.length() == 0)
                             continue;
                         
-                        new_Sample1 = read_data(line1);
+                        new_Sample1 = read_data(line1, false);
                         if(new_Sample1 == null || new_Sample1.date.before(dateStart))
                             continue;
                         index_start = i;
@@ -127,8 +127,8 @@ public class DataSourceCSV2 extends DataSource {
 
                     if(file2.length() > 0){
                         for(int i = index_start; i < new_1.size(); i++){
-                            DataSample new_Sample1 = read_data(new_1.get(i));
-                            DataSample new_Sample2 = read_data(new_2.get(i));
+                            DataSample new_Sample1 = read_data(new_1.get(i), false);
+                            DataSample new_Sample2 = read_data(new_2.get(i), false);
                             new_Sample1.data[2] = new_Sample1.data[2]/
                                     new_Sample2.data[2];
                             OnData(new_Sample1);
@@ -139,7 +139,7 @@ public class DataSourceCSV2 extends DataSource {
                             if(line1 == null || line1.length() == 0)
                                 continue;
                             
-                            DataSample new_Sample1 = read_data(line1);
+                            DataSample new_Sample1 = read_data(line1, false);
                             OnData(new_Sample1);
                         }
                     }

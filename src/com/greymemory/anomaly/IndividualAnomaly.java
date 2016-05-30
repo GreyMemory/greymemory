@@ -40,7 +40,7 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
     }
 
     public String input_file;
-    private String log_file;
+    protected String log_file;
 
     private XDM xdm;
     private SliderWrite trainer;
@@ -48,12 +48,11 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
     private AnomalyCalculator anomaly_calculator;
     private SliderRead.FutureSample prediction = null;
     private long num_samples;
-    private double anomaly_rate;
-    private double predicted_value = 0f;
-    private double error = 0f;
-    private BufferedWriter writer_log;
+    protected double anomaly_rate;
+    protected double predicted_value = 0f;
+    protected double error = 0f;
     private MovingAverage anomaly_average;
-    private MovingAverage input_average;
+    protected MovingAverage input_average;
     private double total_error;
     int num_total_error;
     
@@ -173,6 +172,7 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
             return;
         
         try {
+            BufferedWriter writer_log;
             writer_log = new BufferedWriter(new FileWriter(new File(log_file), true));
             PrintWriter o = new PrintWriter(writer_log);
             o.printf("%s, %d, %f, %f, %f, %f, %f\n", 
@@ -265,20 +265,26 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
             Logger.getLogger(IndividualAnomaly.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    protected DataSource create_data_source(){
+        DataSource data_source = new DataSourceCSV(
+                start_from, 
+                true, // monitoring
+                input_file);
+        return data_source;
+    }
+            
 
     @Override
     public void calculate_cost() {
         
-        DataSourceCSV data_source = null;
+        DataSource data_source = null;
         
         try {
             create_xdm();
             set_cost(Double.MAX_VALUE);
             
-            data_source = new DataSourceCSV(
-                    start_from, 
-                    true, // monitoring
-                    input_file);
+            data_source = create_data_source();
 
             data_source.addListener(this);
 

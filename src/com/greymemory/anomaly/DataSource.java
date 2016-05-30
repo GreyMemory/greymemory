@@ -6,6 +6,8 @@ package com.greymemory.anomaly;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -39,24 +41,32 @@ abstract public class DataSource extends Thread {
     protected Date dateStart;
     protected boolean monitoring;
     
+   
     public String name;
     
     @Override
     public void run() {
     }
     
-    protected DataSample read_data(String line){
+    protected DataSample read_data(String line, boolean header){
         if(line == null || line.length() < 3)
             return null;
         try{
+            
             String[] parts = line.split(",");
             String stime = parts[0];
 
             DataSample result = new DataSample();
-
-            result.timestamp = Long.parseLong(stime);
-
-            result.date = new java.util.Date((long)result.timestamp*1000);
+            if(NAB_format){
+                if(header) 
+                    return null;
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+                result.date = df.parse(stime);
+            } else{
+                result.timestamp = Long.parseLong(stime);
+                result.date = new java.util.Date((long)result.timestamp*1000);
+            }
+            
             Calendar c = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             c.setTime(result.date);
             result.data = new double[parts.length-1+2];
@@ -145,6 +155,16 @@ abstract public class DataSource extends Thread {
     public DataSource(Date dateStart, boolean monitoring){
         this.dateStart = dateStart;
         this.monitoring = monitoring;
+    }
+
+
+    private boolean NAB_format = false;
+    /**
+     * Use csv file format from Numenta anomaly benchmark
+     * @param use_header the use_header to set
+     */
+    public void set_NAB_format(boolean v) {
+        this.NAB_format = v;
     }
     
 }
