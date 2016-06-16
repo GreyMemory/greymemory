@@ -40,6 +40,12 @@ public class MovingAverage {
         return (double)(total / current_size);
     }   
     
+    public double get_last_value() {
+        if(current_size >= samples.length)
+            return 0.0;
+        return samples[current_size-1];
+    }   
+
     int get_size(){
         return samples.length;
     }

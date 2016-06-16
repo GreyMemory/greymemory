@@ -43,10 +43,12 @@ public class DataSourceCSV extends DataSource {
                     reader = new BufferedReader(new FileReader(file));
 
                     int num_processed = 0;
+                    boolean header = true;
                     // read the historic data from the files
                     while ((line = reader.readLine()) != null) {
                         if(Thread.interrupted()) break;
-                        sample = read_data(line, num_processed == 0);
+                        sample = read_data(line, header);
+                        header = false;
                         if(sample == null)
                             continue;
                         if(dateStart != null && sample.date.before(dateStart))

@@ -284,14 +284,11 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
             create_xdm();
             set_cost(Double.MAX_VALUE);
             
-            data_source = create_data_source();
-
-            data_source.addListener(this);
-
             clear_log();
 
+            data_source = create_data_source();
+            data_source.addListener(this);
             data_source.start();
-            
             data_source.join();
             
             
