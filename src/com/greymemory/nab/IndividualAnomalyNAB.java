@@ -10,6 +10,7 @@ import com.greymemory.anomaly.DataSource;
 import com.greymemory.anomaly.DataSourceCSV;
 import com.greymemory.anomaly.IndividualAnomaly;
 import com.greymemory.evolution.Gene;
+import com.greymemory.evolution.Individual;
 import com.greymemory.nab.Labels.NAB_Anomaly;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -57,23 +58,61 @@ public class IndividualAnomalyNAB extends IndividualAnomaly {
             num_samples++;
         }            
         reader.close();
+        
         float range = max - min;
+        this.max_error = range;
+        this.max_storage_size_in_mb = 2000;
         
-        genome.genes.add(new Gene("resolution", range / 10000, range / 100, range / 1000));
-        genome.genes.add(new Gene("activation", range / 10000, range / 100, 40*range / 1000));
+        this.average_anomaly = 5;
+        this.averate_input = 5;
         
-        genome.genes.add(new Gene("activation_day_of_week", 0f, 7f, 2f));
-        genome.genes.add(new Gene("activation_hour", 1f, 24f, 6f));
+        genome.genes.add(new Gene("average_input", 1, 40, 41));
+        genome.genes.add(new Gene("average_anomaly", 1, 20, 1));
         
-        genome.genes.add(new Gene("num_hard_locations", 7f, 90f, 76f));
-        genome.genes.add(new Gene("window", 1f, 9f, 2f));
-        genome.genes.add(new Gene("forgetting_rate", 1000f, 5000f, num_samples / 10));
+        genome.genes.add(new Gene("resolution", range / 300, range / 20, range / 128)); // 1.8
+        genome.genes.add(new Gene("activation", 15, 100, 51));
         
-        genome.genes.add(new Gene("anomaly_window", 1000f, 5000f, 50));
+        genome.genes.add(new Gene("activation_day_of_week", 6f, 7f, 6f));
+        genome.genes.add(new Gene("activation_hour", 18f, 24f, 27f));
         
-        genome.genes.add(new Gene("training_period", 1000f, 1000f, 100));
+        genome.genes.add(new Gene("num_hard_locations", 27f, 90f, 27f));
+        genome.genes.add(new Gene("window", 1f, 2f, 2.52f));
+        genome.genes.add(new Gene("forgetting_rate", 10, 2500, 10));
+        
+        genome.genes.add(new Gene("anomaly_window", 50, 700 / 3, 283));
+        
+        genome.genes.add(new Gene("training_period", 100f, 500f, 387));
+        
         
     }
+    
+    @Override
+    public Individual create() {
+        IndividualAnomalyNAB individual = null;
+        try {
+            individual = new IndividualAnomalyNAB(input_file, log_file,
+                    null, 0, 0, 0);
+            individual.set_anomalies(anomalies);
+        } catch (IOException ex) {
+            Logger.getLogger(IndividualAnomalyNAB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return individual;
+    }
+
+    public Individual create_clone() {
+        IndividualAnomalyNAB individual;
+        try {
+            individual = new IndividualAnomalyNAB(input_file, log_file,
+                    null, 0, 0, 0);
+            individual.genome = genome.create_clone();
+            individual.set_anomalies(anomalies);
+            return individual;
+        } catch (IOException ex) {
+            Logger.getLogger(IndividualAnomalyNAB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+    
     
     protected DataSource create_data_source(){
         DataSource data_source = new DataSourceCSV(
@@ -83,26 +122,76 @@ public class IndividualAnomalyNAB extends IndividualAnomaly {
         
         data_source.set_NAB_format(true);
         
-        // create an empty log file
-        BufferedWriter writer_log;
-        try {
-            writer_log = new BufferedWriter(new FileWriter(new File(log_file), true));
-            PrintWriter o = new PrintWriter(writer_log);
-            o.printf("timestamp,value,anomaly_score,label,prediction,error\n");
-            writer_log.close();
-        } catch (IOException ex) {
-            Logger.getLogger(IndividualAnomalyNAB.class.getName()).log(Level.SEVERE, null, ex);
+        if(log_file != null){
+            // create an empty log file
+            BufferedWriter writer_log;
+            try {
+                writer_log = new BufferedWriter(new FileWriter(new File(log_file), true));
+                PrintWriter o = new PrintWriter(writer_log);
+                o.printf("timestamp,value,anomaly_score,label,prediction,error\n");
+                writer_log.close();
+            } catch (IOException ex) {
+                Logger.getLogger(IndividualAnomalyNAB.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
                 
         return data_source;
     }
     
-    protected void log_results(DataSample sample) {
-        if(log_file == null || log_file.length() == 0)
-            return;
+
+    private int true_positive;
+    private int true_negative;
+    private int false_positive;
+    private int false_negative;
+    
+    @Override
+    public void calculate_cost() {
         
+        DataSource data_source = null;
+
+        true_positive = 0;
+        true_negative = 0;
+        false_positive = 0;
+        false_negative = 0;
         try {
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            create_xdm();
+            set_cost(Double.MAX_VALUE);
+            
+            clear_log();
+
+            data_source = create_data_source();
+            data_source.addListener(this);
+            data_source.start();
+            data_source.join();
+        } catch (InterruptedException ex) {
+            //Logger.getLogger(IndividualAnomaly.class.getName()).log(Level.SEVERE, null, ex);
+            if(data_source != null){
+                try {
+                    data_source.interrupt();
+                    data_source.join();
+                } catch (InterruptedException ex1) {
+                    //Logger.getLogger(IndividualAnomaly.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(IndividualAnomaly.class.getName()).log(Level.SEVERE, null, ex);
+        } finally{
+        }
+        
+        float precision = true_positive * 1.0f / (true_positive + false_positive);
+        float recall = true_positive * 1.0f/ (true_positive + false_negative);
+        
+        float f1_score = 2.0f * (precision*recall)/(precision+recall);
+        set_cost(1.0f - f1_score);
+        
+        clear_xdm();
+        
+        System.out.printf("*");
+    }
+
+    protected void log_results(DataSample sample) {
+        try {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             
             float label = 0.0f;
             for(NAB_Anomaly a : anomalies){
@@ -112,10 +201,25 @@ public class IndividualAnomalyNAB extends IndividualAnomaly {
                 }                
             }
             
+            boolean anomaly = anomaly_rate >= threshold;
+            boolean ground_truth = label > 0.9f;
+            
+            if(anomaly && ground_truth)
+                true_positive++;
+            else if(anomaly && !ground_truth)
+                false_positive++;
+            else if(!anomaly && ground_truth)
+                false_negative++;
+            else 
+                true_negative++;
+            
+            if(log_file == null || log_file.length() == 0)
+                return;
+        
             BufferedWriter writer_log;
             writer_log = new BufferedWriter(new FileWriter(new File(log_file), true));
             PrintWriter o = new PrintWriter(writer_log);
-            o.printf("%s, %f, %f, %f, %f, %f\n", 
+            o.printf("%s,%f,%f,%f,%f,%f\n", 
                     df.format(sample.date),
                     input_average.get_last_value(),
                     anomaly_rate,

@@ -118,13 +118,26 @@ public class Population extends Thread{
     
     private void sort_individuals(ArrayList<Individual> individuals){
         individuals.sort((Individual i1, Individual i2) -> {
+            
+            Double f1 = Double.valueOf(i1.get_cost());
+            Double f2 = Double.valueOf(i2.get_cost());
+            return f1.compareTo(f2);            
+/*            
+            if(i1.get_cost() > i2.get_cost())
+                return 1;
+            else if(i1.get_cost() < i2.get_cost())
+                return -1;
+            else
+                return 0;
+            */
+            /*
             double diff = i1.get_cost() - i2.get_cost();
             if(diff > 0)
                 return 1;
             else if (diff < 0)
                 return -1;
             else
-                return 0;
+                return 0;*/
         });
     }
     
@@ -228,7 +241,8 @@ public class Population extends Thread{
                 previous_cost = best.get_cost();
             }
         } catch (Exception ex) {
-            //ex.printStackTrace();
+            //System.out.println(ex.toString());
+            ex.printStackTrace();
         }
         
         shutdown_pool();

@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.management.MemoryUsage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,18 +57,19 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
     private double total_error;
     int num_total_error;
     
-    double max_error = 1;
+    protected double max_error = 1;
     double median = 1.0;
     
     public double prediction_rate;
     
     public double threshold = 0.95;
-    public int averate_anomaly = 9;
+    public int average_anomaly = 9;
     public int averate_input = 10;
     public String channel;
     
     public int max_samples = 01;
     protected Date start_from;
+    public int max_storage_size_in_mb = 2000;
     
     public IndividualAnomaly(String input_file, String log_file,
             Date start_from, double max_error, double median, int max_samples){
@@ -114,7 +116,7 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
         param.predict = true;
         param.num_channels = 3;
         param.num_channels_prediction = 1;
-        param.max_storage_size_in_mb = 2000;
+        param.max_storage_size_in_mb = max_storage_size_in_mb;
 
         param.activation_radius = new double[param.num_channels];
         param.resolution = new double[param.num_channels];
@@ -153,8 +155,18 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
                 (int)genome.get_gene("anomaly_window").value);
         num_samples = 0;
         
-        anomaly_average = new MovingAverage(averate_anomaly);
+        Gene g = genome.get_gene("average_input");
+        if(g != null)
+            this.averate_input = (int)g.value;
+        
+        g = genome.get_gene("average_anomaly");
+        if(g != null)
+            this.average_anomaly = (int)g.value;
+        
+        anomaly_average = new MovingAverage(average_anomaly);
         input_average = new MovingAverage(averate_input);
+        
+        
         total_error = 0;
         num_total_error = 0;
         
@@ -202,8 +214,8 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
             return;
         num_samples++;
         
-        if(num_samples % (288*5) == 0 && log_file != null && log_file.length() > 0)
-            System.out.printf("%s\n", sample.date.toString());
+        //if(num_samples % (288*5) == 0 && log_file != null && log_file.length() > 0)
+        //    System.out.printf("%s\n", sample.date.toString());
                     
         if(max_samples > 0 && num_samples > max_samples)
             return;
@@ -230,11 +242,9 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
                     error = data[0] - predicted_value;
                     num_predicted++;
                 } 
-                /*
                 else {
-                    predicted_value = prev_sample;
-                    error = data[0] - predicted_value;
-                } */
+                    error = max_error;
+                } 
                 
                 prev_sample = data[0];
 
@@ -263,6 +273,8 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
            
         } catch (Exception ex) {
             Logger.getLogger(IndividualAnomaly.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (OutOfMemoryError e) {
+            Logger.getLogger(IndividualAnomaly.class.getName()).log(Level.SEVERE, null, e);
         }
     }
     
@@ -274,7 +286,7 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
         return data_source;
     }
             
-
+   
     @Override
     public void calculate_cost() {
         

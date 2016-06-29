@@ -40,7 +40,8 @@ public class Gene {
     }
     
     public void mutate(Random rnd){
-        value = value + rnd.nextFloat()*range/3 - rnd.nextFloat()*range/6;
+        //value = value + rnd.nextFloat()*range/3 - rnd.nextFloat()*range/6;
+        value = value + (float)rnd.nextGaussian()*range;
         if(value < min)
             value = min;
         if(value > min + range)

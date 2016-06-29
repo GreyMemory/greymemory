@@ -30,7 +30,7 @@ abstract public class DataSource extends Thread {
         listeners.add(v);
     }
 
-    protected void OnData(DataSample sample) {
+    protected void OnData(DataSample sample)  {
         if(sample == null)
             return;
         last_processed_date = sample.date;

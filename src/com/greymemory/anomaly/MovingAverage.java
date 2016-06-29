@@ -13,6 +13,7 @@ public class MovingAverage {
     private double total = 0f;
     private int index = 0;
     private final double samples[];
+    private double last_value;
 
     public MovingAverage(int size) {
         samples = new double[size];
@@ -21,6 +22,7 @@ public class MovingAverage {
     }
 
     public void add(double x) {
+        last_value = x;
         if(current_size < samples.length){
             samples[current_size] = x;
             total += x;
@@ -41,9 +43,7 @@ public class MovingAverage {
     }   
     
     public double get_last_value() {
-        if(current_size >= samples.length)
-            return 0.0;
-        return samples[current_size-1];
+        return last_value;
     }   
 
     int get_size(){
