@@ -54,7 +54,7 @@ public class DataSourceCSV extends DataSource {
                         if(dateStart != null && sample.date.before(dateStart))
                             continue;
 
-                        OnData(sample);
+                        OnData(sample, this);
                         num_processed++;
                     }            
 
@@ -92,7 +92,7 @@ public class DataSourceCSV extends DataSource {
                             for(int i = index_start; i >= 0 && i < new_data.size(); i++){
                                 line = new_data.get(i);
                                 DataSample new_Sample = read_data(line, false);
-                                OnData(new_Sample);
+                                OnData(new_Sample, this);
                             }
                         }
                     }

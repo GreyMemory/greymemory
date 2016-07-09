@@ -29,8 +29,12 @@ abstract public class DataSource extends Thread {
     public void addListener(DataConsumer v) {
         listeners.add(v);
     }
+    
+    public boolean is_training_period (){
+        return false;
+    }
 
-    protected void OnData(DataSample sample)  {
+    protected void OnData(DataSample sample, DataSource data_source)  {
         if(sample == null)
             return;
         last_processed_date = sample.date;

@@ -22,6 +22,8 @@ import java.lang.management.MemoryUsage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import java.util.Date;
@@ -79,6 +81,9 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
         this.median = median;
         this.max_samples = max_samples;
         this.start_from = start_from;
+        
+        //File filePath = new File(log_file);
+        //filePath.delete();        
     }
 
     @Override
@@ -179,16 +184,19 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
     
     protected void log_results(DataSample sample) {
         //exception handling left as an exercise for the reader
-        
         if(log_file == null || log_file.length() == 0)
             return;
+        
         
         try {
             BufferedWriter writer_log;
             writer_log = new BufferedWriter(new FileWriter(new File(log_file), true));
+            
+            DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+            
             PrintWriter o = new PrintWriter(writer_log);
             o.printf("%s, %d, %f, %f, %f, %f, %f\n", 
-                    sample.get_date_UTC(),
+                    df.format(sample.date),
                     sample.timestamp, 
                     //sample.date,
                     //sample.data[2], 
@@ -200,16 +208,17 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
                     error,
                     anomaly_rate,
                     anomaly_rate > threshold ? 1f : 0f);
+            
             if(log_file.length() > 0)
                 writer_log.close();
         } catch (IOException ex) {
             Logger.getLogger(IndividualAnomaly.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
     
     @Override
     public void OnData(DataSource source, DataSample sample) {
+        
         if(sample.data.length < 3)
             return;
         num_samples++;
@@ -261,9 +270,11 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
             // train
             trainer.train(data, 0);
             
-            log_results(sample);
+            if(!source.is_training_period()){
+                log_results(sample);
+            }
             
-            process(sample);
+            process(sample, source);
 
             // predict
             predictor.process(data);
@@ -343,15 +354,17 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
         this.log_file = log_file;
     }
     
-    private void broadcast(Anomaly anomaly){
+    private void broadcast(Anomaly anomaly, DataSource data_source){
+        if(data_source.is_training_period())
+            return;
         for (AnomalyConsumer hl : listeners){
-            hl.OnAnomaly(anomaly);
+            hl.OnAnomaly(anomaly, this, data_source);
         }
     }
     
     private boolean current_anomaly = false;
     
-    private void process(DataSample sample){
+    private void process(DataSample sample, DataSource data_source){
         if(anomaly_rate > threshold){
             if(!current_anomaly){
                 current_anomaly = true;
@@ -360,7 +373,7 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
                 anomaly.sample = sample;
                 anomaly.anomaly_rate = anomaly_rate;
                 anomaly.start = true;
-                broadcast(anomaly);
+                broadcast(anomaly, data_source);
             }
         } else {
             if(current_anomaly){
@@ -370,7 +383,7 @@ public class IndividualAnomaly extends Individual implements DataConsumer  {
                 anomaly.sample = sample;
                 anomaly.anomaly_rate = anomaly_rate;
                 anomaly.start = false;
-                broadcast(anomaly);
+                broadcast(anomaly, data_source);
             }
         }
     }

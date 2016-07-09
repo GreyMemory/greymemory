@@ -76,9 +76,9 @@ public class DataSourceCSV2 extends DataSource {
                         }
                     } 
                     sample1.data[2] = sample1.data[2]/sample2.data[2];
-                    OnData(sample1);
+                    OnData(sample1, this);
                 } else {
-                    OnData(sample1);
+                    OnData(sample1, this);
                 }
                 
             }            
@@ -131,7 +131,7 @@ public class DataSourceCSV2 extends DataSource {
                             DataSample new_Sample2 = read_data(new_2.get(i), false);
                             new_Sample1.data[2] = new_Sample1.data[2]/
                                     new_Sample2.data[2];
-                            OnData(new_Sample1);
+                            OnData(new_Sample1, this);
                         }
                     } else {
                         for(int i = index_start; i >= 0 && i < new_1.size(); i++){
@@ -140,7 +140,7 @@ public class DataSourceCSV2 extends DataSource {
                                 continue;
                             
                             DataSample new_Sample1 = read_data(line1, false);
-                            OnData(new_Sample1);
+                            OnData(new_Sample1, this);
                         }
                     }
                 }
